@@ -1,3 +1,3 @@
-[submodule "plant_grower"]
-	path = plant_grower
-	url = https://github.com/ConnorWilliams/plant_grower.git
+[submodule "django-plantgrower"]
+	path = django-plantgrower
+	url = git@github.com:ConnorWilliams/django-plantgrower.git
