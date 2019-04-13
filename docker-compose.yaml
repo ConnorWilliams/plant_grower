@@ -1,0 +1,74 @@
+version: "3.7"
+services:
+
+  plantgrower-redis:
+    image: redis:alpine
+
+  plantgrower-postgres:
+    image: pd
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_PASSWORD_FILE: /run/secrets/postgres_password
+      POSTGRES_DB_FILE: /run/secrets/postgres_db
+      PGDATA: /var/lib/postgresql/data/pgdata
+    volumes:
+      - plantgrower-volume:/var/lib/postgresql/data
+    secrets:
+      - postgres_password
+      - postgres_db
+    configs:
+      - source: init_postgres_user
+        target: /docker-entrypoint-initdb.d/init_postgres_user.sh
+
+  plantgrower-rabbitmq:
+    image: rabbitmq:alpine
+
+  django-migrations:
+    image: eggmancw/plant_grower:latest
+    command: ["migrate"]
+    depends_on:
+      - plantgrower-postgres
+
+  plantgrower:
+    image: eggmancw/plant_grower:latest
+    ports:
+      - "8000:8000"
+    environment:
+      PYTHONBUFFERED: 0
+      REDIS_HOST: plantgrower-redis
+      POSTGRES_HOST: plantgrower-postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: plantgrower
+      POSTGRES_PASSWORD: /run/secrets/plantgrower_postgres_password
+      POSTGRES_DB_FILE: /run/secrets/postgres_db
+    depends_on:
+      - django-migrations
+    secrets:
+      - postgres_db
+
+  # celery-worker:
+  #   image: eggmancw/plant_grower:latest
+  #   command: celery -A plant_grower worker -l info
+
+  # celery-beat:
+  #   image: eggmancw/plant_grower:latest
+  #   command: celery -A plant_grower beat -l info
+  #   depends_on:
+  #     - django-migrations
+
+secrets:
+  postgres_password:
+    file: ~/docker_secrets/postgres_password
+  plantgrower_postgres_password:
+    file: ~/docker_secrets/plantgrower_postgres_password
+  postgres_db:
+    file: ~/docker_secrets/postgres_db
+  
+
+configs:
+  init_postgres_user:
+    file: ./init_postgres_user.sh
+
+volumes:
+  plantgrower-volume:

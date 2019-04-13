@@ -1,0 +1,16 @@
+{
+	"folders": [
+		{
+			"path": "/Users/connorwilliams/playground/kubernetes-configurations"
+		},
+		{
+			"path": "/Users/connorwilliams/playground/kubernetes-secrets"
+		},
+		{
+			"path": "."
+		},
+		{
+			"path": "/Users/connorwilliams/playground/provision_raspberry_pi"
+		}
+	]
+}
