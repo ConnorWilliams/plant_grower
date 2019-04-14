@@ -1,47 +1,49 @@
 version: "3.7"
 services:
 
-  plantgrower-redis:
+  redis:
     image: redis:alpine
 
-  plantgrower-postgres:
-    image: pd
+  postgres:
+    build: ./database
     ports:
       - "5432:5432"
     environment:
-      POSTGRES_PASSWORD_FILE: /run/secrets/postgres_password
-      POSTGRES_DB_FILE: /run/secrets/postgres_db
-      PGDATA: /var/lib/postgresql/data/pgdata
+      - POSTGRES_PASSWORD_FILE=/run/secrets/postgres_password
+      - POSTGRES_DB_FILE=/run/secrets/postgres_db
+      - PGDATA=/var/lib/postgresql/data/pgdata
+      - PLANTGROWER_POSTGRES_PASSWORD_FILE=run/secrets/plantgrower_postgres_password
     volumes:
       - plantgrower-volume:/var/lib/postgresql/data
     secrets:
       - postgres_password
+      - plantgrower_postgres_password 
       - postgres_db
-    configs:
-      - source: init_postgres_user
-        target: /docker-entrypoint-initdb.d/init_postgres_user.sh
 
-  plantgrower-rabbitmq:
+  rabbitmq:
     image: rabbitmq:alpine
 
   django-migrations:
     image: eggmancw/plant_grower:latest
     command: ["migrate"]
     depends_on:
-      - plantgrower-postgres
+      - postgres
 
   plantgrower:
     image: eggmancw/plant_grower:latest
+    build:
+      context: ./django-plantgrower
+      dockerfile: Dockerfile.amd64
     ports:
       - "8000:8000"
     environment:
-      PYTHONBUFFERED: 0
-      REDIS_HOST: plantgrower-redis
-      POSTGRES_HOST: plantgrower-postgres
-      POSTGRES_PORT: 5432
-      POSTGRES_USER: plantgrower
-      POSTGRES_PASSWORD: /run/secrets/plantgrower_postgres_password
-      POSTGRES_DB_FILE: /run/secrets/postgres_db
+      - PYTHONBUFFERED=0
+      - REDIS_HOST=redis
+      - POSTGRES_HOST=postgres
+      - POSTGRES_PORT=5432
+      - POSTGRES_USER=plantgrower
+      - POSTGRES_PASSWORD=/run/secrets/plantgrower_postgres_password
+      - POSTGRES_DB_FILE=/run/secrets/postgres_db
     depends_on:
       - django-migrations
     secrets:
@@ -64,11 +66,6 @@ secrets:
     file: ~/docker_secrets/plantgrower_postgres_password
   postgres_db:
     file: ~/docker_secrets/postgres_db
-  
-
-configs:
-  init_postgres_user:
-    file: ./init_postgres_user.sh
 
 volumes:
   plantgrower-volume:
