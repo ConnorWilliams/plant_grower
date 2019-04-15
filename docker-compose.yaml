@@ -22,7 +22,7 @@ services:
     image: rabbitmq:alpine
 
   django-migrations:
-    image: eggmancw/plant_grower:latest
+    image: eggmancw/django-plantgrower:latest
     command: ["migrate"]
     build:
       context: ./django-plantgrower
@@ -42,7 +42,7 @@ services:
       - plantgrower_postgres_password
 
   plantgrower:
-    image: eggmancw/plant_grower:latest
+    image: eggmancw/django-plantgrower:latest
     build:
       context: ./django-plantgrower
       dockerfile: Dockerfile.amd64
@@ -62,15 +62,37 @@ services:
       - postgres_db
       - plantgrower_postgres_password
 
-  # celery-worker:
-  #   image: eggmancw/plant_grower:latest
-  #   command: celery -A plant_grower worker -l info
+  celery-worker:
+    image: eggmancw/django-plantgrower:latest
+    command: celery -A plant_grower worker -l info
+    depends_on:
+      - redis
+    environment:
+      - POSTGRES_HOST=postgres
+      - POSTGRES_PORT=5432
+      - POSTGRES_USER=plantgrower   # Maybe use celery-worker-plantgrower
+      - POSTGRES_PASSWORD_FILE=/run/secrets/plantgrower_postgres_password
+      - POSTGRES_DB_FILE=/run/secrets/postgres_db
+      - REDIS_HOST=redis
+    secrets:
+      - postgres_db
+      - plantgrower_postgres_password
 
-  # celery-beat:
-  #   image: eggmancw/plant_grower:latest
-  #   command: celery -A plant_grower beat -l info
-  #   depends_on:
-  #     - django-migrations
+  celery-beat:
+    image: eggmancw/django-plantgrower:latest
+    command: celery -A plant_grower beat -l info
+    environment:
+      - POSTGRES_HOST=postgres
+      - POSTGRES_PORT=5432
+      - POSTGRES_USER=plantgrower   # Maybe use celery-beat-plantgrower
+      - POSTGRES_PASSWORD_FILE=/run/secrets/plantgrower_postgres_password
+      - POSTGRES_DB_FILE=/run/secrets/postgres_db
+      - REDIS_HOST=redis
+    depends_on:
+      - django-migrations
+    secrets:
+      - postgres_db
+      - plantgrower_postgres_password
 
 secrets:
   postgres_password:
