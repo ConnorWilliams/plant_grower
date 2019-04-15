@@ -6,18 +6,16 @@ services:
 
   postgres:
     build: ./database
-    ports:
-      - "5432:5432"
     environment:
       - POSTGRES_PASSWORD_FILE=/run/secrets/postgres_password
       - POSTGRES_DB_FILE=/run/secrets/postgres_db
       - PGDATA=/var/lib/postgresql/data/pgdata
-      - PLANTGROWER_POSTGRES_PASSWORD_FILE=run/secrets/plantgrower_postgres_password
+      - PLANTGROWER_POSTGRES_PASSWORD_FILE=/run/secrets/plantgrower_postgres_password
     volumes:
       - plantgrower-volume:/var/lib/postgresql/data
     secrets:
       - postgres_password
-      - plantgrower_postgres_password 
+      - plantgrower_postgres_password
       - postgres_db
 
   rabbitmq:
@@ -26,8 +24,22 @@ services:
   django-migrations:
     image: eggmancw/plant_grower:latest
     command: ["migrate"]
+    build:
+      context: ./django-plantgrower
+      dockerfile: Dockerfile.amd64
+    environment:
+      - PYTHONBUFFERED=0
+      - REDIS_HOST=redis
+      - POSTGRES_HOST=postgres
+      - POSTGRES_PORT=5432
+      - POSTGRES_USER=plantgrower
+      - POSTGRES_PASSWORD_FILE=/run/secrets/plantgrower_postgres_password
+      - POSTGRES_DB_FILE=/run/secrets/postgres_db
     depends_on:
       - postgres
+    secrets:
+      - postgres_db
+      - plantgrower_postgres_password
 
   plantgrower:
     image: eggmancw/plant_grower:latest
@@ -42,12 +54,13 @@ services:
       - POSTGRES_HOST=postgres
       - POSTGRES_PORT=5432
       - POSTGRES_USER=plantgrower
-      - POSTGRES_PASSWORD=/run/secrets/plantgrower_postgres_password
+      - POSTGRES_PASSWORD_FILE=/run/secrets/plantgrower_postgres_password
       - POSTGRES_DB_FILE=/run/secrets/postgres_db
     depends_on:
       - django-migrations
     secrets:
       - postgres_db
+      - plantgrower_postgres_password
 
   # celery-worker:
   #   image: eggmancw/plant_grower:latest
