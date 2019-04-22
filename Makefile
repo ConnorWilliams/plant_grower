@@ -10,12 +10,22 @@ help: ## This help.
 .DEFAULT_GOAL := help
 
 NAMESPACE := $(if $(NAMESPACE),$(NAMESPACE),eggmancw)
-LABEL := $(if $(LABEL),$(LABEL),first)
+ARCHITECTURE := $(if $(ARCHITECTURE),$(ARCHITECTURE),amd64)
+APP_NAME := $(if $(APP_NAME),$(APP_NAME),NOAPPNAME)
+LATEST_COMMIT := $(shell git rev-parse HEAD)
+DOCKER_TAG := $(LATEST_COMMIT)
 
 # DOCKER TASKS
 # Build the container
 build: ## Build the container
-	docker build -t $(NAMESPACE)/$(APP_NAME):$(LABEL) $(APP_NAME)/
+	docker build -f $(APP_NAME)/Dockerfile.$(ARCHITECTURE) -t $(NAMESPACE)/$(APP_NAME):$(DOCKER_TAG) $(APP_NAME)/
+	docker tag $(NAMESPACE)/$(APP_NAME):$(DOCKER_TAG) $(NAMESPACE)/$(APP_NAME):$(ARCHITECTURE)
+	docker tag $(NAMESPACE)/$(APP_NAME):$(DOCKER_TAG) $(NAMESPACE)/$(APP_NAME):latest
 
 build-nc: ## Build the container without caching
-	docker build -t $(NAMESPACE)/$(APP_NAME):$(LABEL) --no-cache $(APP_NAME)/
+	docker build -f $(APP_NAME)/Dockerfile.$(ARCHITECTURE) -t $(NAMESPACE)/$(APP_NAME):$(DOCKER_TAG) --no-cache $(APP_NAME)/
+	docker tag $(NAMESPACE)/$(APP_NAME):$(DOCKER_TAG) $(NAMESPACE)/$(APP_NAME):$(ARCHITECTURE)
+	docker tag $(NAMESPACE)/$(APP_NAME):$(DOCKER_TAG) $(NAMESPACE)/$(APP_NAME):latest	
+
+push: ## Push the image to dockerhub
+	docker push $(NAMESPACE)/$(APP_NAME)
