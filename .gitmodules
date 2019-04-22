@@ -1,3 +1,6 @@
 [submodule "django-plantgrower"]
 	path = django-plantgrower
 	url = git@github.com:ConnorWilliams/django-plantgrower.git
+[submodule "raspberrypi_iot_plantgrower"]
+	path = raspberrypi_iot_plantgrower
+	url = git@github.com:ConnorWilliams/raspberrypi_iot_plantgrower.git
