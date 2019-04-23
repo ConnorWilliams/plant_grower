@@ -96,6 +96,11 @@ services:
     secrets:
       - postgres_db
       - plantgrower_postgres_password
+  
+  raspi-iot:
+    image: eggmancw/raspberrypi_iot_plantgrower:latest
+    depends_on:
+      - mosquitto
 
 secrets:
   postgres_password:
