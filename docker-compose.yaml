@@ -25,11 +25,11 @@ services:
     image: rabbitmq:alpine
 
   django-migrations:
-    image: eggmancw/django-plantgrower:latest
+    image: eggmancw/django-plantgrower:arm32v7
     command: ["migrate"]
     build:
       context: ./django-plantgrower
-      dockerfile: Dockerfile.amd64
+      dockerfile: Dockerfile.arm32v7
     environment:
       - PYTHONBUFFERED=0
       - REDIS_HOST=redis
@@ -45,10 +45,10 @@ services:
       - plantgrower_postgres_password
 
   plantgrower:
-    image: eggmancw/django-plantgrower:latest
+    image: eggmancw/django-plantgrower:arm32v7
     build:
       context: ./django-plantgrower
-      dockerfile: Dockerfile.amd64
+      dockerfile: Dockerfile.arm32v7
     ports:
       - "8000:8000"
     environment:
@@ -66,7 +66,7 @@ services:
       - plantgrower_postgres_password
 
   celery-worker:
-    image: eggmancw/django-plantgrower:latest
+    image: eggmancw/django-plantgrower:arm32v7
     command: celery -A plant_grower worker -l info
     depends_on:
       - redis
@@ -82,7 +82,7 @@ services:
       - plantgrower_postgres_password
 
   celery-beat:
-    image: eggmancw/django-plantgrower:latest
+    image: eggmancw/django-plantgrower:arm32v7
     command: celery -A plant_grower beat -l info
     environment:
       - POSTGRES_HOST=postgres
@@ -98,7 +98,10 @@ services:
       - plantgrower_postgres_password
   
   raspi-iot:
-    image: eggmancw/raspberrypi_iot_plantgrower:latest
+    image: eggmancw/raspberrypi_iot_plantgrower:arm32
+    build:
+      context: ./raspberrypi_iot_plantgrower
+      dockerfile: Dockerfile.arm32
     depends_on:
       - mosquitto
 
