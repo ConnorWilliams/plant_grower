@@ -104,6 +104,9 @@ services:
       dockerfile: Dockerfile.arm32
     depends_on:
       - mosquitto
+    devices:
+      - /dev/gpiomem
+      - /dev/mem
 
 secrets:
   postgres_password:
